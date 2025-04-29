@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Ball Launcher</title>
+    <style>
+        body {
+            background: #f5f5f5;
+            margin: 0;
+            overflow: hidden;
+        }
+        #canvas {
+            background: white;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let balls = [];
+let dragging = false;
+let startX = 0, startY = 0, endX = 0, endY = 0;
+const gravity = 500;                // Pixels per second^2
+
+class Ball {
+    constructor(x, y, vx, vy) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.radius = 10;
+    }
+
+    update(dt) {
+        this.vy += gravity * dt;    // Gravity acceleration
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+canvas.addEventListener('mousedown', (e) => {
+    startX = e.offsetX;
+    startY = e.offsetY;
+    dragging = true;
+});
+
+canvas.addEventListener('mouseup', (e) => {
+    endX = e.offsetX;
+    endY = e.offsetY;
+    const velocityScale = 3; // adjust this multiplier for desired speed
+    let vx = (endX - startX) * velocityScale;
+    let vy = (endY - startY) * velocityScale;
+    balls.push(new Ball(startX, startY, vx, vy));
+    dragging = false;
+});
+
+let lastTime = null;
+function animate(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw balls
+    for (let ball of balls) {
+        ball.update(dt);
+        ball.draw();
+    }
+
+    // Optional: Draw launch line if dragging and moved enough
+    if (dragging && (Math.abs(endX - startX) > 2 || Math.abs(endY - startY) > 2)) {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.strokeStyle = 'red';
+        ctx.stroke();
+    }
+
+
+    requestAnimationFrame(animate);
+}
+
+canvas.addEventListener('mousemove', (e) => {
+    if (dragging) {
+        endX = e.offsetX;
+        endY = e.offsetY;
+    }
+});
+
+// Start animation loop
+requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>
